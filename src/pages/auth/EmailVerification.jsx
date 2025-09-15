@@ -12,6 +12,7 @@ import {
 import useAuthStore from '../../store/authStore';
 import { useToast } from '../../components/shared/Toast';
 import api from '../../services/api';
+import { getRoleBasedDashboard } from '../../utils/roleNavigation';
 
 function EmailVerification() {
   const [searchParams] = useSearchParams();
@@ -52,9 +53,10 @@ function EmailVerification() {
         
         toast.success('Email verified successfully!', 'Welcome to WelldifyAI!');
         
-        // Redirect to dashboard after a delay
+        // Redirect to role-based dashboard after a delay
         setTimeout(() => {
-          navigate('/dashboard', { replace: true });
+          const dashboardPath = getRoleBasedDashboard(user?.role);
+          navigate(dashboardPath, { replace: true });
         }, 3000);
       } else {
         if (response.message?.includes('expired')) {
@@ -160,7 +162,10 @@ function EmailVerification() {
               </div>
             </div>
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => {
+                const dashboardPath = getRoleBasedDashboard(user?.role);
+                navigate(dashboardPath);
+              }}
               className="btn-primary group"
             >
               Go to Dashboard

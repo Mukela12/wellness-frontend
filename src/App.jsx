@@ -54,6 +54,9 @@ import LoadingScreen from './components/ui/LoadingScreen';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/shared/Toast';
 
+// Utility imports
+import { getRoleBasedDashboard } from './utils/roleNavigation';
+
 // Create Query Client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,17 +108,6 @@ function ProtectedRoute({ children, requiredRole = null, allowedRoles = null }) 
   return children;
 }
 
-/**
- * Get dashboard path based on user role
- */
-function getRoleBasedDashboard(role) {
-  switch (role) {
-    case 'admin': return '/admin/dashboard';
-    case 'hr': return '/hr/dashboard';
-    case 'employee': return '/employee/dashboard';
-    default: return '/employee/dashboard';
-  }
-}
 
 /**
  * Onboarding Route Component (only checks authentication, not onboarding status)
@@ -457,6 +449,13 @@ function App() {
                     <DashboardLayout>
                       <Profile />
                     </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+
+                {/* Dashboard Route - Redirects to role-based dashboard */}
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Navigate to={getRoleBasedDashboard(useAuthStore.getState().user?.role)} replace />
                   </ProtectedRoute>
                 } />
 

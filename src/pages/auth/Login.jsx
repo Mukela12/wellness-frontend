@@ -10,6 +10,7 @@ import useAuthStore from '../../store/authStore';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import api from '../../services/api';
+import { getRoleBasedDashboard } from '../../utils/roleNavigation';
 
 /**
  * Login Page Component
@@ -100,7 +101,8 @@ function Login() {
       if (result.success) {
         // Small delay to ensure state is updated before navigation
         setTimeout(() => {
-          navigate('/dashboard', { replace: true });
+          const dashboardPath = getRoleBasedDashboard(result.data?.user?.role);
+          navigate(dashboardPath, { replace: true });
         }, 100);
       }
     } catch (error) {

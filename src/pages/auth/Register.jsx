@@ -9,6 +9,7 @@ import useAuthStore from '../../store/authStore';
 // Component imports
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import { useToast } from '../../components/shared/Toast';
 
 /**
  * Register Page Component
@@ -17,6 +18,7 @@ import Input from '../../components/ui/Input';
 function Register() {
   const navigate = useNavigate();
   const { register, isLoading, error, clearError } = useAuthStore();
+  const { toast } = useToast();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -124,7 +126,13 @@ function Register() {
       });
 
       if (result.success) {
-        // Clear form and errors before navigation
+        // Show success toast
+        toast.success(
+          'Registration successful! Please check your email to verify your account.',
+          'Account Created'
+        );
+        
+        // Clear form and errors
         setFormData({
           name: '',
           email: '',
@@ -137,14 +145,10 @@ function Register() {
         });
         clearError();
         
-        // Show success message and redirect to login
-        navigate('/login', {
-          state: {
-            message: 'Registration successful! Please check your email to verify your account.',
-            type: 'success'
-          },
-          replace: true
-        });
+        // Delay navigation to allow toast to be visible
+        setTimeout(() => {
+          navigate('/login', { replace: true });
+        }, 2000);
       }
     } catch (error) {
       console.error('Registration error:', error);
