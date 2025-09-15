@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { MailIcon, LockIcon, UserIcon, BuildingIcon, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { MailIcon, LockIcon, UserIcon, BuildingIcon, EyeIcon, EyeOffIcon, CheckCircleIcon } from 'lucide-react';
 
 // Store imports
 import useAuthStore from '../../store/authStore';
@@ -33,6 +33,8 @@ function Register() {
   const [formErrors, setFormErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   // Handle input changes
   const handleChange = (e) => {
@@ -126,11 +128,11 @@ function Register() {
       });
 
       if (result.success) {
-        // Show success toast
-        toast.success(
-          'Registration successful! Please check your email to verify your account.',
-          'Account Created'
-        );
+        // Store the email for the success message
+        setUserEmail(formData.email);
+        
+        // Show success state
+        setRegistrationSuccess(true);
         
         // Clear form and errors
         setFormData({
@@ -145,10 +147,10 @@ function Register() {
         });
         clearError();
         
-        // Delay navigation to allow toast to be visible
+        // Auto-redirect to login after 5 seconds
         setTimeout(() => {
           navigate('/login', { replace: true });
-        }, 2000);
+        }, 5000);
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -170,6 +172,75 @@ function Register() {
     'hr', 
     'admin'
   ];
+
+  // Show success message if registration is complete
+  if (registrationSuccess) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="text-center"
+      >
+        <div className="mb-8">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
+          >
+            <CheckCircleIcon size={40} className="text-green-600" />
+          </motion.div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Registration Successful! 🎉
+          </h2>
+          <p className="text-lg text-gray-700 mb-2">
+            Welcome to WelldifyAI!
+          </p>
+          <p className="text-gray-600 mb-6">
+            We've sent a verification email to:
+          </p>
+          <p className="text-lg font-semibold text-sage-600 mb-8">
+            {userEmail}
+          </p>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
+          <h3 className="font-semibold text-blue-900 mb-2">
+            Next Steps:
+          </h3>
+          <ol className="text-left text-blue-800 space-y-2">
+            <li className="flex items-start">
+              <span className="font-semibold mr-2">1.</span>
+              <span>Check your email inbox (and spam folder)</span>
+            </li>
+            <li className="flex items-start">
+              <span className="font-semibold mr-2">2.</span>
+              <span>Click the verification link in the email</span>
+            </li>
+            <li className="flex items-start">
+              <span className="font-semibold mr-2">3.</span>
+              <span>Log in with your credentials</span>
+            </li>
+          </ol>
+        </div>
+
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">
+            Redirecting to login page in a few seconds...
+          </p>
+          <motion.button
+            onClick={() => navigate('/login', { replace: true })}
+            className="btn-primary"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Go to Login Now
+          </motion.button>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
