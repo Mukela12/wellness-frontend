@@ -21,10 +21,6 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1000
   },
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
-    force: true
-  },
   define: {
     // Fix for some compatibility issues
     global: 'globalThis',
