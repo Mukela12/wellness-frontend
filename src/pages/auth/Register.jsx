@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { MailIcon, LockIcon, UserIcon, BuildingIcon, EyeIcon, EyeOffIcon, CheckCircleIcon } from 'lucide-react';
@@ -11,6 +11,10 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useToast } from '../../components/shared/Toast';
 
+// SessionStorage key for registration success
+const REGISTRATION_SUCCESS_KEY = 'welldify_registration_success';
+const REGISTRATION_EMAIL_KEY = 'welldify_registration_email';
+
 /**
  * Register Page Component
  * Professional employee registration with form validation
@@ -19,7 +23,7 @@ function Register() {
   const navigate = useNavigate();
   const { register, isLoading, error, clearError } = useAuthStore();
   const { toast } = useToast();
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -29,12 +33,27 @@ function Register() {
     department: '',
     role: '',
   });
-  
+
   const [formErrors, setFormErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
+  const [registrationSuccess, setRegistrationSuccess] = useState(() => {
+    // Initialize from sessionStorage to survive re-renders
+    return sessionStorage.getItem(REGISTRATION_SUCCESS_KEY) === 'true';
+  });
+  const [userEmail, setUserEmail] = useState(() => {
+    // Initialize from sessionStorage
+    return sessionStorage.getItem(REGISTRATION_EMAIL_KEY) || '';
+  });
+
+  // Cleanup sessionStorage on unmount or when navigating away
+  useEffect(() => {
+    return () => {
+      // Clear sessionStorage when component unmounts
+      sessionStorage.removeItem(REGISTRATION_SUCCESS_KEY);
+      sessionStorage.removeItem(REGISTRATION_EMAIL_KEY);
+    };
+  }, []);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -128,12 +147,16 @@ function Register() {
       });
 
       if (result.success) {
+        // Persist to sessionStorage to survive re-renders
+        sessionStorage.setItem(REGISTRATION_SUCCESS_KEY, 'true');
+        sessionStorage.setItem(REGISTRATION_EMAIL_KEY, formData.email);
+
         // Store the email for the success message
         setUserEmail(formData.email);
-        
+
         // Show success state
         setRegistrationSuccess(true);
-        
+
         // Clear form and errors
         setFormData({
           name: '',
@@ -146,9 +169,12 @@ function Register() {
           phone: ''
         });
         clearError();
-        
+
         // Auto-redirect to login after 5 seconds
         setTimeout(() => {
+          // Clear sessionStorage before navigating
+          sessionStorage.removeItem(REGISTRATION_SUCCESS_KEY);
+          sessionStorage.removeItem(REGISTRATION_EMAIL_KEY);
           navigate('/login', { replace: true });
         }, 5000);
       }
@@ -169,12 +195,23 @@ function Register() {
 
   const roles = [
     'employee',
-    'hr', 
+    'hr',
     'admin'
   ];
 
+  // Check sessionStorage on EVERY render to handle re-renders from authStore updates
+  const shouldShowSuccess = registrationSuccess || sessionStorage.getItem(REGISTRATION_SUCCESS_KEY) === 'true';
+  const displayEmail = userEmail || sessionStorage.getItem(REGISTRATION_EMAIL_KEY) || '';
+
+  console.log('📦 Checking sessionStorage on render:', {
+    registrationSuccess,
+    sessionStorageValue: sessionStorage.getItem(REGISTRATION_SUCCESS_KEY),
+    shouldShowSuccess,
+    displayEmail
+  });
+
   // Show success message if registration is complete
-  if (registrationSuccess) {
+  if (shouldShowSuccess) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -201,7 +238,7 @@ function Register() {
             We've sent a verification email to:
           </p>
           <p className="text-lg font-semibold text-sage-600 mb-8">
-            {userEmail}
+            {displayEmail}
           </p>
         </div>
 
@@ -230,7 +267,12 @@ function Register() {
             Redirecting to login page in a few seconds...
           </p>
           <motion.button
-            onClick={() => navigate('/login', { replace: true })}
+            onClick={() => {
+              // Clear sessionStorage before navigating
+              sessionStorage.removeItem(REGISTRATION_SUCCESS_KEY);
+              sessionStorage.removeItem(REGISTRATION_EMAIL_KEY);
+              navigate('/login', { replace: true });
+            }}
             className="btn-primary"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
